@@ -2,7 +2,7 @@ import "server-only";
 import { format, startOfMonth } from "date-fns";
 import { asc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { stockHoldings, stockPrices } from "@/db/schema";
+import { stockHoldings, stockPrices, stockWatchlist } from "@/db/schema";
 import { LOT_SIZE, STOCKS, type StockSymbol } from "@/lib/constants";
 import { pctChange } from "@/lib/format";
 import type { Viewer } from "@/lib/viewer";
@@ -18,8 +18,6 @@ import { zoned } from "@/lib/dates";
 
 export const STOCK_RANGES = ["1mo", "3mo", "6mo", "1y"] as const;
 export type StockRange = (typeof STOCK_RANGES)[number];
-
-export const WATCHLIST = STOCKS;
 
 export type StockQuote =
   | {
@@ -50,6 +48,8 @@ type YahooChart = {
       meta: {
         regularMarketPrice: number;
         regularMarketTime: number;
+        longName?: string;
+        shortName?: string;
         regularMarketDayHigh?: number;
         regularMarketDayLow?: number;
         regularMarketVolume?: number;
@@ -124,12 +124,45 @@ async function fetchQuote(symbol: string, name: string, range: StockRange): Prom
   }
 }
 
-/** The watchlist for the Stocks card; "updated" times are shown in the viewer's timezone. */
-export async function getStocks(range: StockRange, tz: string): Promise<StockQuote[]> {
-  const quotes = await Promise.all(WATCHLIST.map((s) => fetchQuote(s.symbol, s.name, range)));
-  return quotes.map((q) =>
-    q.ok ? { ...q, updatedLabel: format(zoned(new Date(q.marketTime), tz), "d MMM, HH:mm") } : q,
-  );
+/** A quote on your watchlist, with the row id (to remove it). */
+export type WatchQuote = StockQuote & { watchId: number };
+
+/** Your watchlist (Money → Stocks card); "updated" times are shown in your timezone. */
+export async function getStocks(v: Viewer, range: StockRange): Promise<WatchQuote[]> {
+  const rows = await db
+    .select()
+    .from(stockWatchlist)
+    .where(eq(stockWatchlist.userId, v.id))
+    .orderBy(asc(stockWatchlist.sortOrder), asc(stockWatchlist.id));
+  const quotes = await Promise.all(rows.map((s) => fetchQuote(s.symbol, s.name, range)));
+  return quotes.map((q, i) => ({
+    ...(q.ok ? { ...q, updatedLabel: format(zoned(new Date(q.marketTime), v.tz), "d MMM, HH:mm") } : q),
+    watchId: rows[i].id,
+  }));
+}
+
+/** "PT Telkom Indonesia (Persero) Tbk." → "Telkom Indonesia" (shorter for the card). */
+function companyName(raw: string): string {
+  return raw
+    .replace(/^PT\.?\s+/i, "")
+    .replace(/\s*\(Persero\)/i, "")
+    .replace(/,?\s*Tbk\.?$/i, "")
+    .trim();
+}
+
+/** Checks that an IDX ticker exists on Yahoo (`<SYMBOL>.JK`). Null when it doesn't; throws when Yahoo can't be reached. */
+export async function lookupIdxStock(symbol: string): Promise<{ symbol: string; name: string } | null> {
+  const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}.JK?range=5d&interval=1d`, {
+    headers: { "User-Agent": "Mozilla/5.0" },
+    signal: AbortSignal.timeout(8000),
+    cache: "no-store",
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Yahoo HTTP ${res.status}`);
+  const json = (await res.json()) as YahooChart;
+  const meta = json.chart.result?.[0]?.meta;
+  if (!meta || typeof meta.regularMarketPrice !== "number") return null;
+  return { symbol, name: companyName(meta.shortName ?? meta.longName ?? symbol) || symbol };
 }
 
 /** Remembers the latest good price (best effort: a failed write never breaks the page). */

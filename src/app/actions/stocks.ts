@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { stockHoldings } from "@/db/schema";
+import { stockHoldings, stockWatchlist } from "@/db/schema";
 import { STOCK_SYMBOLS } from "@/lib/constants";
 import { parseAmount } from "@/lib/format";
+import { lookupIdxStock } from "@/lib/queries/stocks";
 import { requireViewer } from "@/lib/viewer";
 import { NOT_FOUND, fail, formObject, type ActionResult } from "./result";
 
@@ -66,6 +67,60 @@ export async function deleteStock(id: number): Promise<ActionResult> {
       .returning({ id: stockHoldings.id });
     if (!deleted.length) return NOT_FOUND;
     revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (err) {
+    return fail(err);
+  }
+}
+
+/* ------------------------------------------------------------------ watchlist (Money → Stocks card) */
+
+const MAX_WATCHLIST = 15;
+const TickerInput = z
+  .string()
+  .transform((s) => s.trim().toUpperCase().replace(/\.JK$/, ""))
+  .pipe(z.string().regex(/^[A-Z0-9]{2,6}$/, "Enter an IDX code, e.g. TLKM"));
+
+/** Adds an IDX stock to your watchlist after checking Yahoo knows it. */
+export async function addWatchStock(rawSymbol: string): Promise<ActionResult> {
+  const v = await requireViewer();
+  try {
+    const symbol = TickerInput.parse(rawSymbol);
+    const rows = await db
+      .select({ symbol: stockWatchlist.symbol, sortOrder: stockWatchlist.sortOrder })
+      .from(stockWatchlist)
+      .where(eq(stockWatchlist.userId, v.id));
+    if (rows.some((r) => r.symbol === symbol)) return { ok: false, error: `${symbol} is already on your list.` };
+    if (rows.length >= MAX_WATCHLIST) return { ok: false, error: `Your list holds up to ${MAX_WATCHLIST} stocks. Remove one first.` };
+
+    let found: Awaited<ReturnType<typeof lookupIdxStock>>;
+    try {
+      found = await lookupIdxStock(symbol);
+    } catch {
+      return { ok: false, error: "Couldn't reach Yahoo Finance. Try again in a moment." };
+    }
+    if (!found) return { ok: false, error: `Couldn't find ${symbol} on the IDX.` };
+
+    const [row] = await db
+      .insert(stockWatchlist)
+      .values({ userId: v.id, symbol, name: found.name, sortOrder: Math.max(-1, ...rows.map((r) => r.sortOrder)) + 1 })
+      .returning({ id: stockWatchlist.id });
+    revalidatePath("/money");
+    return { ok: true, id: row.id };
+  } catch (err) {
+    return fail(err);
+  }
+}
+
+export async function removeWatchStock(id: number): Promise<ActionResult> {
+  const v = await requireViewer();
+  try {
+    const deleted = await db
+      .delete(stockWatchlist)
+      .where(and(eq(stockWatchlist.id, z.number().int().parse(id)), eq(stockWatchlist.userId, v.id)))
+      .returning({ id: stockWatchlist.id });
+    if (!deleted.length) return NOT_FOUND;
+    revalidatePath("/money");
     return { ok: true };
   } catch (err) {
     return fail(err);

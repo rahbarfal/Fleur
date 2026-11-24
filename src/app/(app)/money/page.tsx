@@ -60,7 +60,7 @@ export default async function MoneyPage({ searchParams }: { searchParams: Search
     view === "weekly" ? getWeeklyCashFlow(v, year, month, categoryId, walletId, now) : [],
     view === "daily" ? getDailyCalendar(v, year, month, categoryId, walletId, now) : null,
     view === "yearly" ? getYearlyCashFlow(v, categoryId, walletId, now) : [],
-    getStocks(range, v.tz),
+    getStocks(v, range),
     getDebts(v, now),
   ]);
   const { income, expense, byCategory, ...summary } = detail;

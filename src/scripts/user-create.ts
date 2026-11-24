@@ -8,8 +8,8 @@ import { randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { account, user } from "../db/schema";
-import { DEFAULT_TIMEZONE } from "../lib/constants";
+import { account, stockWatchlist, user } from "../db/schema";
+import { DEFAULT_TIMEZONE, STOCKS } from "../lib/constants";
 import { isTimeZone } from "../lib/timezones";
 import { args, db, die, run, temporaryPassword } from "./_cli";
 
@@ -50,6 +50,8 @@ run(async () => {
       createdAt: now,
       updatedAt: now,
     });
+    // The Stocks card starts with the default watchlist; they can change it on the Money page.
+    await tx.insert(stockWatchlist).values(STOCKS.map((st, i) => ({ userId: id, symbol: st.symbol, name: st.name, sortOrder: i })));
   });
 
   console.log(`

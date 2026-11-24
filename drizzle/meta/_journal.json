@@ -99,6 +99,13 @@
       "when": 1795492852897,
       "tag": "0013_demo_users",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795508821756,
+      "tag": "0014_stock_watchlist",
+      "breakpoints": true
     }
   ]
 }

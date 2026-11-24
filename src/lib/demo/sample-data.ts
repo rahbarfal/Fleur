@@ -16,6 +16,7 @@ import {
   debts,
   notes,
   stockHoldings,
+  stockWatchlist,
   transactions,
   transfers,
   wallets,
@@ -84,6 +85,15 @@ const EXERCISES: Record<string, Exercise[]> = {
     { name: "Goblet squat", sets: 3, reps: 12, weight: 20 },
   ],
 };
+
+/** The demo's Stocks card: more than 2, so it shows the scrolling list. */
+const DEMO_WATCHLIST = [
+  ["BBCA", "Bank Central Asia"],
+  ["BBRI", "Bank Rakyat Indonesia"],
+  ["BMRI", "Bank Mandiri"],
+  ["TLKM", "Telkom Indonesia"],
+  ["ASII", "Astra International"],
+] as const;
 
 const MONTHS_OF_HISTORY = 12;
 const DAY_MS = 86_400_000;
@@ -179,6 +189,9 @@ export async function seedSampleData(tx: Tx, { userId, tz, now = new Date() }: {
     { userId, symbol: "BBCA", lots: 12, sortOrder: 0 },
     { userId, symbol: "BBRI", lots: 20, sortOrder: 1 },
   ]);
+  await tx.insert(stockWatchlist).values(
+    DEMO_WATCHLIST.map(([symbol, name], i) => ({ userId, symbol, name, sortOrder: i })),
+  );
   const debtRows = await tx
     .insert(debts)
     .values([

@@ -156,6 +156,22 @@ export const debts = pgTable(
   ],
 ).enableRLS();
 
+/** The stocks on your Money → Stocks panel (any IDX ticker), in display order. Separate from stocks you hold. */
+export const stockWatchlist = pgTable(
+  "stock_watchlist",
+  {
+    id: id(),
+    userId: userId(),
+    /** IDX ticker without ".JK", uppercase (e.g. TLKM). */
+    symbol: text("symbol").notNull(),
+    /** Company name from Yahoo when it was added. */
+    name: text("name").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("stock_watchlist_user_symbol_unique").on(t.userId, t.symbol)],
+).enableRLS();
+
 /** Last good price per ticker (shared by all users), used when Yahoo can't be reached. */
 export const stockPrices = pgTable("stock_prices", {
   symbol: text("symbol", { enum: STOCK_SYMBOLS }).primaryKey(),
@@ -426,6 +442,7 @@ export type User = typeof user.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type Wallet = typeof wallets.$inferSelect;
 export type StockHolding = typeof stockHoldings.$inferSelect;
+export type WatchStock = typeof stockWatchlist.$inferSelect;
 export type Debt = typeof debts.$inferSelect;
 export type Transfer = typeof transfers.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;

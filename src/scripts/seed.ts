@@ -16,6 +16,7 @@ import {
   noteImages,
   notes,
   stockHoldings,
+  stockWatchlist,
   transactions,
   transfers,
   wallets,
@@ -32,7 +33,7 @@ run(async () => {
 
   const summary = await db.transaction(async (tx) => {
     // Children before parents (transactions/transfers point at wallets, categories and emails).
-    for (const t of [transactions, transfers, emailWalletLinks, emailRules, emails, wallets, categories, budgets, stockHoldings, debts, notes, noteImages, workoutLogs, workoutSchedule]) {
+    for (const t of [transactions, transfers, emailWalletLinks, emailRules, emails, wallets, categories, budgets, stockHoldings, stockWatchlist, debts, notes, noteImages, workoutLogs, workoutSchedule]) {
       await tx.delete(t).where(eq(t.userId, u.id));
     }
     return seedSampleData(tx, { userId: u.id, tz: u.timezone });

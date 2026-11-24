@@ -2,7 +2,7 @@
 
 A personal dashboard for the things I check every day: **money, email, notes and workouts**, on one calm screen.
 
-**[Live demo →](https://YOUR-APP.vercel.app)** Click **Try the demo** on the sign-in page. You get a private sandbox full of sample data, and it's deleted after an hour.
+**[Live demo →](https://fleur-super.vercel.app)** Click **Try the demo** on the sign-in page. You get a private sandbox full of sample data, and it's deleted after an hour.
 
 ![Fleur overview](docs/screenshots/overview.png)
 
@@ -15,7 +15,7 @@ Spending against the monthly budget, net worth and cash flow (yearly, monthly, w
 ![Money page](docs/screenshots/money.png)
 
 - **Wallets** for banks, e-wallets and cash. Balances come from income, expenses and transfers between wallets.
-- **Stocks** (BBCA, BBRI) valued at live IDX prices. **Debts and subscriptions** with their next due date.
+- A **stock watchlist** you can edit (any IDX ticker, live prices), and the **stocks you hold**, valued at those prices. **Debts and subscriptions** with their next due date.
 - **Cash flow** by year, month, week or day, with a calendar of each day's gain or loss.
 - Income and expense lists, categories and a monthly budget.
 

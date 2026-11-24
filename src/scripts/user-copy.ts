@@ -22,6 +22,7 @@ import {
   notes,
   stockHoldings,
   stockPrices,
+  stockWatchlist,
   transactions,
   transfers,
   user,
@@ -37,6 +38,7 @@ const USER_TABLES = [
   wallets,
   emails,
   stockHoldings,
+  stockWatchlist,
   debts,
   transfers,
   transactions,
@@ -51,7 +53,7 @@ const USER_TABLES = [
 ] as const;
 
 /** Tables with an identity `id`: their sequences must continue after the copied ids. */
-const IDENTITY_TABLES = [categories, wallets, emails, stockHoldings, debts, transfers, transactions, budgets, notes, workoutSchedule, workoutLogs, emailRules];
+const IDENTITY_TABLES = [categories, wallets, emails, stockHoldings, stockWatchlist, debts, transfers, transactions, budgets, notes, workoutSchedule, workoutLogs, emailRules];
 
 run(async () => {
   const a = args({ email: { type: "string" }, yes: { type: "boolean" } });
