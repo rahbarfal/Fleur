@@ -1,0 +1,20 @@
+node_modules
+.next
+out
+data/*.db
+data/*.db-*
+data/*.sql
+.env*
+!.env.example
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+.next-verify
+
+# Private technical notes (README.md is the public overview)
+Project.md
+
+# Local AI-assistant tooling
+.claude/
+.agents/
+skills-lock.json

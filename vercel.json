@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": [
+    "sin1"
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/gmail",
+      "schedule": "0 23 * * *"
+    },
+    {
+      "path": "/api/cron/demo",
+      "schedule": "0 18 * * *"
+    }
+  ]
+}

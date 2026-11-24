@@ -1,0 +1,1 @@
+ALTER TABLE "emails" DROP COLUMN "is_financial";
