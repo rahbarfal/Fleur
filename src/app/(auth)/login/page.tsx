@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { LogIn } from "lucide-react";
+import { ArrowUpRight, LogIn } from "lucide-react";
 import { demoEnabled } from "@/lib/demo/demo";
 import { getViewer } from "@/lib/viewer";
 import { LoginForm } from "./login-form";
@@ -31,6 +31,18 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
           Your money, inbox, workouts and notes in one place. Accounts are invite-only.
         </p>
         <LoginForm next={next} demo={demoEnabled()} />
+        <p className="mt-6 border-t border-[#e3e4e7] pt-4 text-center text-[12.5px] text-muted">
+          Made by{" "}
+          <a
+            href="https://naufal-akbar-rahardjo.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-0.5 font-medium text-ink-2 underline-offset-2 transition hover:text-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            Naufal Akbar Rahardjo
+            <ArrowUpRight className="size-3.5" strokeWidth={2.2} />
+          </a>
+        </p>
       </div>
     </div>
   );
